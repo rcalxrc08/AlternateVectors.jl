@@ -16,6 +16,7 @@ using Test
 	@test typeof(@. sin(av)*av+1+av)<:AlternateVector
 	@test typeof(@. sin(av)*av+1+exp(av))<:AlternateVector
 	@test typeof(@. sin(av)*av*av+1+exp(av))<:AlternateVector
+	@test typeof(@. sin(cos(av))*av*av+exp(1)+exp(av))<:AlternateVector
 	@test typeof(@. 2+sin(av)*av+1+exp(av))<:AlternateVector
 	@test all(@. av ≈ av_c)
 	@test all(@. sin(av) ≈ sin(av_c))
@@ -48,6 +49,7 @@ end
 	@test typeof(@. sin(av)*av+1+exp(av))<:AlternatePaddedVector
 	@test typeof(@. sin(av)*av*av+1+exp(av))<:AlternatePaddedVector
 	@test typeof(@. 2+sin(av)*av+1+exp(av))<:AlternatePaddedVector
+	@test typeof(@. 2+sin(cos(av))*av+1+exp(av)+exp(1))<:AlternatePaddedVector
 	@test all(@. av ≈ av_c)
 	@test all(@. av[1:5] ≈ av_c[1:5])
 	@test all(@. av[3:2:9] ≈ av_c[3:2:9])
