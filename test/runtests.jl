@@ -49,6 +49,7 @@ end
 	@test typeof(@. sin(av)*av+1+exp(av))<:AlternatePaddedVector
 	@test typeof(@. sin(av)*av*av+1+exp(av))<:AlternatePaddedVector
 	@test typeof(@. 2+sin(av)*av+1+exp(av))<:AlternatePaddedVector
+	@test typeof(@. 2+sin(av)*av+1+log(abs(av)))<:AlternatePaddedVector
 	@test typeof(@. 2+sin(cos(av))*av+1+exp(av)+exp(1))<:AlternatePaddedVector
 	@test all(@. av ≈ av_c)
 	@test all(@. av[1:5] ≈ av_c[1:5])
