@@ -26,7 +26,7 @@ using Test
 	@test all(@. exp(av)+av_c ≈ exp(av_c)+av_c)
 	@test all(@. exp(av)+av_c+av*av_c ≈ exp(av_c)+av_c+av*av_c)
 	@test all(@. exp(av)+av+av*av ≈ exp(av_c)+av_c+av*av_c)
-	@test sum(av) ≈ sum(ac)
+	@test sum(av) ≈ sum(av_c)
 end
 
 
@@ -64,5 +64,5 @@ end
 	@test all(@. exp(av)+av_c ≈ exp(av_c)+av_c)
 	@test all(@. exp(av)+av_c+av*av_c ≈ exp(av_c)+av_c+av*av_c)
 	@test all(@. exp(av)+av+av*av ≈ exp(av_c)+av_c+av*av_c)
-	@test sum(av) ≈ sum(ac)
+	@test sum(av) ≈ sum(av_c)
 end
