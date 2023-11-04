@@ -13,6 +13,7 @@ using Test
 	@test typeof(1 .+ av)<:AlternateVector
 	@test typeof(av.+1)<:AlternateVector
 	@test typeof(sin.(av))<:AlternateVector
+	@test !(typeof(av.+tuple(ones(N)...)) <: AlternateVector)
 	@test typeof(@. sin(av)*av+1+av)<:AlternateVector
 	@test typeof(@. sin(av)*av+1+exp(av))<:AlternateVector
 	@test typeof(@. sin(av)*av*av+1+exp(av))<:AlternateVector
@@ -25,6 +26,7 @@ using Test
 	@test all(@. exp(av)+av_c ≈ exp(av_c)+av_c)
 	@test all(@. exp(av)+av_c+av*av_c ≈ exp(av_c)+av_c+av*av_c)
 	@test all(@. exp(av)+av+av*av ≈ exp(av_c)+av_c+av*av_c)
+	@test sum(av) ≈ sum(ac)
 end
 
 
@@ -62,4 +64,5 @@ end
 	@test all(@. exp(av)+av_c ≈ exp(av_c)+av_c)
 	@test all(@. exp(av)+av_c+av*av_c ≈ exp(av_c)+av_c+av*av_c)
 	@test all(@. exp(av)+av+av*av ≈ exp(av_c)+av_c+av*av_c)
+	@test sum(av) ≈ sum(ac)
 end
