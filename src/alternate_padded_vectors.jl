@@ -79,7 +79,7 @@ end
 function Base.sum(x::AlternatePaddedVector)
     isfinalodd = isodd(x.n)
     nhalf = div(x.n, 2) - 1
-    return (nhalf + isfinalodd) * x.value_odd + nhalf * x.value_even + x.bound_initial_value + x.bound_final_value
+    return (nhalf + isfinalodd) * x.value_even + nhalf * x.value_odd + x.bound_initial_value + x.bound_final_value
 end
 
 using ChainRulesCore
