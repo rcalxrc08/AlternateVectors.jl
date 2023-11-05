@@ -53,6 +53,7 @@ end
 	@test typeof(@. 2+sin(av)*av+1+exp(av))<:AlternatePaddedVector
 	@test typeof(@. 2+sin(av)*av+1+log(abs(av)))<:AlternatePaddedVector
 	@test typeof(@. 2+sin(cos(av))*av+1+exp(av)+exp(1))<:AlternatePaddedVector
+	@test !(typeof(av.+tuple(ones(N)...)) <: AlternatePaddedVector)
 	@test all(@. av ≈ av_c)
 	@test all(@. av[1:5] ≈ av_c[1:5])
 	@test all(@. av[3:2:9] ≈ av_c[3:2:9])
@@ -64,5 +65,11 @@ end
 	@test all(@. exp(av)+av_c ≈ exp(av_c)+av_c)
 	@test all(@. exp(av)+av_c+av*av_c ≈ exp(av_c)+av_c+av*av_c)
 	@test all(@. exp(av)+av+av*av ≈ exp(av_c)+av_c+av*av_c)
+	@test all(@. exp(av+sin(1+av))+av+av*av ≈ exp(av_c+sin(1+av_c))+av_c+av*av_c)
 	@test sum(av) ≈ sum(av_c)
+	
+	#mixture
+	av_1=AlternateVector(-2.0,3.0,N)
+	@test typeof(av_1 .+ av)<:AlternatePaddedVector
+	
 end
