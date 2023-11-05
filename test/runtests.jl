@@ -122,11 +122,3 @@ end
     res_std = Zygote.gradient(f_std, x)
     @test res_av[1] ≈ res_std[1]
 end
-
-# @testset "Zygote AlternatePaddedVector" begin
-#     function f(x)
-#         N = 11
-#         av = AlternatePaddedVector(log(abs(x)), exp(x), -3 * x, x, N)
-#         return sum(av)
-#     end
-# end

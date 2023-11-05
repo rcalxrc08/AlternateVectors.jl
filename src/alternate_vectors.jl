@@ -30,14 +30,11 @@ Base.showarg(io::IO, A::AlternateVector, _) = print(io, typeof(A))
 # Broacasting relation against other arrays
 const ArrayStyleAlternateVector = Broadcast.ArrayStyle{AlternateVector}
 Base.BroadcastStyle(::Type{<:AlternateVector{T}}) where {T} = ArrayStyleAlternateVector()
-#Relation to scalars
-Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::Broadcast.AbstractArrayStyle{0}) = a
-Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::Broadcast.DefaultArrayStyle{0}) = a
-#Relation to tuples
 Base.BroadcastStyle(::ArrayStyleAlternateVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
-#Relation to same level Arrays
-# Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.AbstractArrayStyle{N}} where {N} = a
-Base.BroadcastStyle(::ArrayStyleAlternateVector, a::Broadcast.DefaultArrayStyle{N}) where {N} = a
+Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::V) where {V <: Broadcast.AbstractArrayStyle{0}} = a
+Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.AbstractArrayStyle} = a
+Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::V) where {V <: Broadcast.DefaultArrayStyle{0}} = a
+Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.DefaultArrayStyle} = a
 
 #Broacasting over AlternateVector
 flatten_even(x) = x

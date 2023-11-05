@@ -39,17 +39,18 @@ end
 Base.showarg(io::IO, A::AlternatePaddedVector, _) = print(io, typeof(A))
 
 const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
+
 Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = ArrayStyleAlternatePaddedVector()
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.AbstractArrayStyle{0}) = a
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.DefaultArrayStyle{0}) = a
 #Relation to tuples
 Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
 #Relation to same level Arrays
-# Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::Broadcast.AbstractArrayStyle{N}) where {N} = a
-# Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadcast.AbstractArrayStyle{N}} where {N} = a
-Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::Broadcast.DefaultArrayStyle{N}) where {N} = a
+Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadcast.AbstractArrayStyle} = a
+Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadcast.DefaultArrayStyle} = a
 
 Base.BroadcastStyle(::ArrayStyleAlternateVector, a::ArrayStyleAlternatePaddedVector) = a
+Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::ArrayStyleAlternateVector) = a
 
 #Broacasting over AlternatePaddedVector
 apv_flatten_even(x) = x
