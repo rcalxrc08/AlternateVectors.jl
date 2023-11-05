@@ -28,10 +28,16 @@ end
 Base.showarg(io::IO, A::AlternateVector, _) = print(io, typeof(A))
 
 # Broacasting relation against other arrays
-Base.BroadcastStyle(::Type{<:AlternateVector{T}}) where {T} = Broadcast.ArrayStyle{AlternateVector{T}}()
-Base.BroadcastStyle(a::Broadcast.ArrayStyle{AlternateVector{T}}, ::Broadcast.DefaultArrayStyle{0}) where {T} = a
-Base.BroadcastStyle(::Broadcast.ArrayStyle{AlternateVector{T}}, ::Base.Broadcast.Style{Tuple}) where {T} = Broadcast.DefaultArrayStyle{1}()
-Base.BroadcastStyle(::Broadcast.ArrayStyle{AlternateVector{T}}, a::Broadcast.DefaultArrayStyle{N}) where {T, N} = a
+const ArrayStyleAlternateVector = Broadcast.ArrayStyle{AlternateVector}
+Base.BroadcastStyle(::Type{<:AlternateVector{T}}) where {T} = ArrayStyleAlternateVector()
+#Relation to scalars
+Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::Broadcast.AbstractArrayStyle{0}) = a
+Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::Broadcast.DefaultArrayStyle{0}) = a
+#Relation to tuples
+Base.BroadcastStyle(::ArrayStyleAlternateVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
+#Relation to same level Arrays
+# Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.AbstractArrayStyle{N}} where {N} = a
+Base.BroadcastStyle(::ArrayStyleAlternateVector, a::Broadcast.DefaultArrayStyle{N}) where {N} = a
 
 #Broacasting over AlternateVector
 flatten_even(x) = x
@@ -40,7 +46,7 @@ flatten_odd(x) = flatten_even(x)
 flatten_even(x::AlternateVector) = x.value_even
 flatten_odd(x::AlternateVector) = x.value_odd
 
-function Base.materialize(bc1::Base.Broadcast.Broadcasted{Base.Broadcast.ArrayStyle{AlternateVector{T}}, Nothing, <:F, <:R}) where {T, F, R}
+function Base.materialize(bc1::Base.Broadcast.Broadcasted{ArrayStyleAlternateVector, Nothing, <:F, <:R}) where {F, R}
     bc = Broadcast.flatten(bc1)
     func = bc.f
     args = bc.args

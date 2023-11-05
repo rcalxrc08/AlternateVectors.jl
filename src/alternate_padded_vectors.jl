@@ -38,16 +38,18 @@ end
 # IO
 Base.showarg(io::IO, A::AlternatePaddedVector, _) = print(io, typeof(A))
 
-# Broacasting relation against other arrays
-Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = Broadcast.ArrayStyle{AlternatePaddedVector{T}}()
-# Relation against scalars
-Base.BroadcastStyle(a::Broadcast.ArrayStyle{AlternatePaddedVector{T}}, ::Broadcast.DefaultArrayStyle{0}) where {T} = a
-# Relation against tuples
-Base.BroadcastStyle(::Broadcast.ArrayStyle{AlternatePaddedVector{T}}, ::Base.Broadcast.Style{Tuple}) where {T} = Broadcast.DefaultArrayStyle{1}()
-#Relation against general arrays
-Base.BroadcastStyle(::Broadcast.ArrayStyle{AlternatePaddedVector{T}}, a::Broadcast.DefaultArrayStyle{N}) where {T, N} = a
-#Relation against general AlternateVectors
-Base.BroadcastStyle(a::Broadcast.ArrayStyle{AlternatePaddedVector{T}}, ::Broadcast.ArrayStyle{AlternateVector{T}}) where {T} = a
+const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
+Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = ArrayStyleAlternatePaddedVector()
+Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.AbstractArrayStyle{0}) = a
+Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.DefaultArrayStyle{0}) = a
+#Relation to tuples
+Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
+#Relation to same level Arrays
+# Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::Broadcast.AbstractArrayStyle{N}) where {N} = a
+# Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadcast.AbstractArrayStyle{N}} where {N} = a
+Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::Broadcast.DefaultArrayStyle{N}) where {N} = a
+
+Base.BroadcastStyle(::ArrayStyleAlternateVector, a::ArrayStyleAlternatePaddedVector) = a
 
 #Broacasting over AlternatePaddedVector
 apv_flatten_even(x) = x
@@ -64,7 +66,7 @@ apv_flatten_even(x::AlternateVector) = x.value_even
 apv_flatten_final(x::AlternateVector) = @views x[end]
 apv_flatten_final(x::AlternatePaddedVector) = x.bound_final_value
 
-function Base.materialize(bc1::Base.Broadcast.Broadcasted{Base.Broadcast.ArrayStyle{AlternatePaddedVector{T}}, Nothing, <:F, <:R}) where {T, F, R}
+function Base.materialize(bc1::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
     bc = Broadcast.flatten(bc1)
     func = bc.f
     args = bc.args
