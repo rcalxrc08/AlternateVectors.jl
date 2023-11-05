@@ -33,7 +33,8 @@ using Test, Dates, ChainRulesCore, Zygote
     av_d = AlternateVector(Dates.Date(1992, 1, 1), Dates.Date(1992, 10, 1), N)
     av_d_1 = collect(av_d)
     one_day = Dates.Day(1)
-    @test all(@. av_d + one_day == av_d_1 + one_day)
+    res_av_with_ref = @. av_d + one_day
+    @test all(@. res_av_with_ref == av_d_1 + one_day)
 end
 
 @testset "arithmetical operations closed" begin
@@ -47,6 +48,7 @@ end
     @test av[4] == 3.0
     @test av[end] == 4.0
     @show av
+    Base.showarg(Core.CoreSTDOUT(), av, nothing)
     println(av)
     av_c = collect(av)
     @test typeof(av[1:2]) <: AlternatePaddedVector
@@ -76,7 +78,8 @@ end
     av_d = AlternatePaddedVector(Dates.Date(1992, 1, 1), Dates.Date(1992, 9, 1), Dates.Date(1922, 1, 1), Dates.Date(1392, 10, 1), N)
     av_d_1 = collect(av_d)
     one_day = Dates.Day(1)
-    @test all(@. av_d + one_day == av_d_1 + one_day)
+    res_av_with_ref = @. av_d + one_day
+    @test all(@. res_av_with_ref == av_d_1 + one_day)
     #mixture
     av_1 = AlternateVector(-2.0, 3.0, N)
     @test typeof(av_1 .+ av) <: AlternatePaddedVector
