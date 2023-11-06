@@ -30,12 +30,9 @@ After the installation, to test the package type on the Julia REPL the following
 Pkg.test("AlternateVectors")
 ```
 ## Example of Usage
-The following example is the pricing of a European Call Option with underlying varying
-according to the Black Scholes Model, given the implied volatility.
-After that it is possible to check the result computing the inverse of the Black Scholes formula.
 ```julia
 #Import the Package
-using FinancialToolbox
+using AlternateVectors
 x=AlternateVectors(0.2,2.3,10)
 @show @. sin(x)
 ```
