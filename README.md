@@ -33,6 +33,11 @@ Pkg.test("AlternateVectors")
 ```julia
 #Import the Package
 using AlternateVectors
-x=AlternateVectors(0.2,2.3,10)
+x=AlternateVector(0.2,2.3,10)
+y=randn(10)
+z=AlternatePaddedVector(0.2,-2.0,4.0,2.3,10)
 @show @. sin(x)
+@show @. sin(x)+exp(z)
+@show @. sin(x)*y
+@show @. sin(x)*y+z
 ```
