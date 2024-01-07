@@ -1,7 +1,7 @@
 using AlternateVectors
 using Test, Dates, ChainRulesCore, Zygote
 @show "Starting tests"
-
+using SparseArrays
 @testset "AlternateVectors arithmetical operations closed" begin
     N = 11
     av = AlternateVector(-2.0, 3.0, N)
@@ -17,6 +17,7 @@ using Test, Dates, ChainRulesCore, Zygote
     @test typeof(av .+ 1) <: AlternateVector
     @test typeof(sin.(av)) <: AlternateVector
     @test !(typeof(av .+ tuple(ones(N)...)) <: AlternateVector)
+    @test !(typeof(tuple(ones(N)...) .+ av) <: AlternateVector)
     @test typeof(@. sin(av) * av + 1 + av) <: AlternateVector
     @test typeof(@. sin(av) * av + 1 + exp(av)) <: AlternateVector
     @test typeof(@. sin(av) * av * av + 1 + exp(av)) <: AlternateVector
@@ -35,6 +36,10 @@ using Test, Dates, ChainRulesCore, Zygote
     one_day = Dates.Day(1)
     res_av_with_ref = @. av_d + one_day
     @test all(@. res_av_with_ref == av_d_1 + one_day)
+    #test sparse
+    sparse_p = spzeros(Float64, N)
+    sparse_p[1] = 4.0
+    @test typeof(sin.(av .* sparse_p)) <: typeof(sparse_p)
 end
 
 @testset "arithmetical operations closed" begin
@@ -62,6 +67,7 @@ end
     @test typeof(@. 2 + sin(av) * av + 1 + log(abs(av))) <: AlternatePaddedVector
     @test typeof(@. 2 + sin(cos(av)) * av + 1 + exp(av) + exp(1)) <: AlternatePaddedVector
     @test !(typeof(av .+ tuple(ones(N)...)) <: AlternatePaddedVector)
+    @test !(typeof(tuple(ones(N)...) .+ av) <: AlternateVector)
     @test all(@. av ≈ av_c)
     @test all(@. av[1:5] ≈ av_c[1:5])
     @test all(@. av[3:2:9] ≈ av_c[3:2:9])
@@ -83,6 +89,10 @@ end
     #mixture
     av_1 = AlternateVector(-2.0, 3.0, N)
     @test typeof(av_1 .+ av) <: AlternatePaddedVector
+    #test sparse
+    sparse_p = spzeros(Float64, N)
+    sparse_p[1] = 4.0
+    @test typeof(sin.(av .* sparse_p)) <: typeof(sparse_p)
 end
 
 @testset "Zygote AlternateVector" begin
