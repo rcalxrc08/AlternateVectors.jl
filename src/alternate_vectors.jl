@@ -36,6 +36,9 @@ Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.Abs
 Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::V) where {V <: Broadcast.DefaultArrayStyle{0}} = a
 Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.DefaultArrayStyle} = a
 
+Base.BroadcastStyle(::ArrayStyleAlternateVector, ::SparseArrays.HigherOrderFns.SparseVecStyle) = SparseArrays.HigherOrderFns.PromoteToSparse()
+SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(::AlternateVector, rest...) = SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(rest...)
+
 #Broacasting over AlternateVector
 flatten_even(x) = x
 flatten_even(x::Base.RefValue) = x.x
@@ -43,10 +46,10 @@ flatten_odd(x) = flatten_even(x)
 flatten_even(x::AlternateVector) = x.value_even
 flatten_odd(x::AlternateVector) = x.value_odd
 
-function Base.materialize(bc1::Base.Broadcast.Broadcasted{ArrayStyleAlternateVector, Nothing, <:F, <:R}) where {F, R}
-    bc = Broadcast.flatten(bc1)
-    func = bc.f
-    args = bc.args
+function Base.materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternateVector, Nothing, <:F, <:R}) where {F, R}
+    bc_f = Broadcast.flatten(bc)
+    func = bc_f.f
+    args = bc_f.args
     axes_result = Broadcast.combine_axes(args...)
     odd_part = func(flatten_odd.(args)...)
     even_part = func(flatten_even.(args)...)

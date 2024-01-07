@@ -51,6 +51,9 @@ Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadca
 
 Base.BroadcastStyle(::ArrayStyleAlternateVector, a::ArrayStyleAlternatePaddedVector) = a
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::ArrayStyleAlternateVector) = a
+#Sparse
+Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::SparseArrays.HigherOrderFns.SparseVecStyle) = SparseArrays.HigherOrderFns.PromoteToSparse()
+SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(::AlternatePaddedVector, rest...) = SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(rest...)
 
 #Broacasting over AlternatePaddedVector
 apv_flatten_even(x) = x
@@ -61,16 +64,17 @@ apv_flatten_final(x) = apv_flatten_even(x)
 apv_flatten_initial(x::AlternatePaddedVector) = x.bound_initial_value
 apv_flatten_even(x::AlternatePaddedVector) = x.value_even
 apv_flatten_odd(x::AlternatePaddedVector) = x.value_odd
+apv_flatten_final(x::AlternatePaddedVector) = x.bound_final_value
+#Compatibility with AlternateVector
 apv_flatten_initial(x::AlternateVector) = x.value_odd
 apv_flatten_odd(x::AlternateVector) = x.value_odd
 apv_flatten_even(x::AlternateVector) = x.value_even
 apv_flatten_final(x::AlternateVector) = @views x[end]
-apv_flatten_final(x::AlternatePaddedVector) = x.bound_final_value
 
-function Base.materialize(bc1::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
-    bc = Broadcast.flatten(bc1)
-    func = bc.f
-    args = bc.args
+function Base.materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
+    bc_f = Broadcast.flatten(bc)
+    func = bc_f.f
+    args = bc_f.args
     axes_result = Broadcast.combine_axes(args...)
     in_part = func(apv_flatten_initial.(args)...)
     even_part = func(apv_flatten_even.(args)...)
