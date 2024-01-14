@@ -3,6 +3,10 @@ struct AlternateVector{T} <: AbstractArray{T, 1}
     value_odd::T
     value_even::T
     n::Int64
+    function AlternateVector(value_odd::T, value_even::T, n::Int64) where {T}
+        (0 <= n) || throw("length of AlternateVector must be greater than zero. Provided is $n.")
+        return new{T}(value_odd, value_even, n)
+    end
 end
 
 ### Implementation of the array interface
