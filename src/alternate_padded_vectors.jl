@@ -6,7 +6,7 @@ struct AlternatePaddedVector{T} <: AbstractArray{T, 1}
     bound_final_value::T
     n::Int64
     function AlternatePaddedVector(bound_initial_value::T, value_even::T, value_odd::T, bound_final_value::T, n::Int64) where {T}
-        (2 <= n) || throw("length of AlternatePaddedVector must be greater than 2. Provided is $n")
+        (2 <= n) || throw("length of AlternatePaddedVector must be greater than 2. Provided is $n.")
         return new{T}(bound_initial_value, value_even, value_odd, bound_final_value, n)
     end
 end
