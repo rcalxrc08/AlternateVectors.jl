@@ -63,7 +63,7 @@ end
 function Base.sum(x::AlternateVector)
     isfinalodd = isodd(x.n)
     nhalf = div(x.n, 2)
-    return (nhalf + isfinalodd) * x.value_odd + nhalf * x.value_even
+    return muladd(nhalf, x.value_even, (nhalf + isfinalodd) * x.value_odd)
 end
 
 using ChainRulesCore
