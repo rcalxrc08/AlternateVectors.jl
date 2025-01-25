@@ -6,7 +6,7 @@ struct AlternatePaddedVector{T} <: AbstractArray{T, 1}
     bound_final_value::T
     n::Int64
     function AlternatePaddedVector(bound_initial_value::T, value_even::T, value_odd::T, bound_final_value::T, n::Int64) where {T}
-        (2 <= n) || throw("length of AlternatePaddedVector must be greater than 2. Provided is $n.")
+        (2 <= n) || throw("length of AlternatePaddedVector must be greater than 1. Provided is $n.")
         return new{T}(bound_initial_value, value_even, value_odd, bound_final_value, n)
     end
 end
@@ -18,6 +18,8 @@ function Base.getindex(x::AlternatePaddedVector, ind::Int)
     @boundscheck (1 <= ind <= x.n) || throw(BoundsError(x, ind))
     ifelse(ind == 1, x.bound_initial_value, ifelse(ind == x.n, x.bound_final_value, ifelse(isodd(ind), x.value_odd, x.value_even)))
 end
+
+Base.getindex(x::AlternatePaddedVector, ::Colon) = x
 
 # AlternatePaddedVector is closed under getindex.
 function Base.getindex(A::AlternatePaddedVector, el::AbstractRange{T}) where {T <: Int}
@@ -41,8 +43,8 @@ Base.showarg(io::IO, A::AlternatePaddedVector, _) = print(io, typeof(A))
 const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
 
 Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = ArrayStyleAlternatePaddedVector()
-Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.AbstractArrayStyle{0}) = a
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.DefaultArrayStyle{0}) = a
+Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.AbstractArrayStyle{0}) = Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
 #Relation to tuples
 Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
 #Relation to same level Arrays
@@ -58,6 +60,7 @@ SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(::AlternatePaddedVecto
 #Broacasting over AlternatePaddedVector
 apv_flatten_even(x) = x
 apv_flatten_even(x::Base.RefValue) = x.x
+apv_flatten_even(x::AbstractArray{T, 0}) where {T} = x[]
 apv_flatten_initial(x) = apv_flatten_even(x)
 apv_flatten_odd(x) = apv_flatten_even(x)
 apv_flatten_final(x) = apv_flatten_even(x)
@@ -91,14 +94,17 @@ end
 
 using ChainRulesCore
 function ChainRulesCore.rrule(::Type{AlternatePaddedVector}, bound_initial_value::T, value_even::T, value_odd::T, bound_final_value::T, n::Int64) where {T}
-    function AlternatePaddedVector_pb(Δapv)
-        der_bound_initial_value = @views Δapv[1]
+    function AlternatePaddedVector_pb_ext(Δapv)
+        #The following should break some CUDA example.
+        bd_val_v = AlternatePaddedVector(one(T), zero(T), zero(T), zero(T), n)
+        der_bound_initial_value = sum(Δapv .* bd_val_v)
         odd_v = AlternatePaddedVector(zero(T), zero(T), one(T), zero(T), n)
         odd_der = sum(odd_v .* Δapv)
         even_v = AlternatePaddedVector(zero(T), one(T), zero(T), zero(T), n)
         even_der = sum(even_v .* Δapv)
-        der_bound_final_value = @views Δapv[end]
+        #The following should break some CUDA example.
+        der_bound_final_value = sum(Δapv) - even_der - odd_der - der_bound_initial_value
         NoTangent(), der_bound_initial_value, even_der, odd_der, der_bound_final_value, NoTangent()
     end
-    return AlternatePaddedVector(bound_initial_value, value_even, value_odd, bound_final_value, n), AlternatePaddedVector_pb
+    return AlternatePaddedVector(bound_initial_value, value_even, value_odd, bound_final_value, n), AlternatePaddedVector_pb_ext
 end

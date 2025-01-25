@@ -1,7 +1,39 @@
 using AlternateVectors
-using Test, Dates, ChainRulesCore, Zygote
+using Test, Dates, ChainRulesCore, Zygote, LazyArrays
 @show "Starting tests"
 using SparseArrays
+
+struct ZeroDimensionalVector{T} <: AbstractArray{T, 0}
+    value::T
+    function ZeroDimensionalVector(value::T) where {T}
+        return new{T}(value)
+    end
+end
+
+### Implementation of the array interface
+Base.size(::ZeroDimensionalVector) = ()
+
+function Base.getindex(x::ZeroDimensionalVector, ind::Int)
+    throw(BoundsError(x, ind))
+end
+function Base.getindex(A::ZeroDimensionalVector)
+    return A.value
+end
+
+# IO
+Base.showarg(io::IO, A::ZeroDimensionalVector, _) = print(io, typeof(A))
+
+# Broacasting relation against other arrays
+struct ArrayStyleZeroDimVector <: Broadcast.AbstractArrayStyle{0} end
+Base.BroadcastStyle(::Type{<:ZeroDimensionalVector{T}}) where {T} = ArrayStyleZeroDimVector()
+Base.BroadcastStyle(::ArrayStyleZeroDimVector, b::Base.Broadcast.Style{Tuple}) = b
+function Base.BroadcastStyle(::ArrayStyleZeroDimVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
+    return b
+end
+function Base.BroadcastStyle(::ArrayStyleZeroDimVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
+    return b
+end
+
 @testset "AlternateVectors arithmetical operations closed" begin
     N = 11
     av = AlternateVector(-2.0, 3.0, N)
@@ -13,6 +45,7 @@ using SparseArrays
     @show av
     av_c = collect(av)
     @test typeof(av[1:2]) <: AlternateVector
+    @test typeof(av[:]) <: AlternateVector
     @test typeof(1 .+ av) <: AlternateVector
     @test typeof(av .+ 1) <: AlternateVector
     @test typeof(sin.(av)) <: AlternateVector
@@ -40,12 +73,32 @@ using SparseArrays
     sparse_p = spzeros(Float64, N)
     sparse_p[1] = 4.0
     @test typeof(sin.(av .* sparse_p)) <: typeof(sparse_p)
+    #test lazy arrays
+    D = LazyArray(@~ exp.(1:N))
+    D_c = collect(D)
+    res_mul_lazy_1 = D .* av
+    res_mul_lazy_2 = av .* D
+    res_mul = av_c .* D_c
+    @test all(@. res_mul_lazy_1 ≈ res_mul)
+    @test all(@. res_mul_lazy_2 ≈ res_mul)
+
+    x_zero_dim = ZeroDimensionalVector(1)
+    res_lazy_1_zero_dim = x_zero_dim .* av
+    res_lazy_2_zero_dim = av .* x_zero_dim
+    @test all(@. res_lazy_1_zero_dim ≈ res_lazy_2_zero_dim)
+
+    #broken
+    x_zero_dim_r = Array{Float64, 0}(undef)
+    x_zero_dim_r .= 0
+    res_zero_d_r = @. x_zero_dim_r * av
+    res_zero_d = @. x_zero_dim_r * av_c
+    @test all(@. res_zero_d ≈ res_zero_d_r)
 end
 
 @testset "arithmetical operations closed" begin
     N = 11
     av = AlternatePaddedVector(-2.0, 3.0, 2.0, 4.0, N)
-    @test_throws "length of AlternatePaddedVector must be greater than 2." AlternatePaddedVector(1, 1, 1, 1, 1)
+    @test_throws "length of AlternatePaddedVector must be greater than 1." AlternatePaddedVector(1, 1, 1, 1, 1)
     @test_throws "Trying to getindex with an AbstractRange of length" av[1:1]
     @test av[1] == -2.0
     @test av[2] == 3.0
@@ -57,6 +110,7 @@ end
     println(av)
     av_c = collect(av)
     @test typeof(av[1:2]) <: AlternatePaddedVector
+    @test typeof(av[:]) <: AlternatePaddedVector
     @test typeof(1 .+ av) <: AlternatePaddedVector
     @test typeof(av .+ 1) <: AlternatePaddedVector
     @test typeof(sin.(av)) <: AlternatePaddedVector
@@ -93,6 +147,27 @@ end
     sparse_p = spzeros(Float64, N)
     sparse_p[1] = 4.0
     @test typeof(sin.(av .* sparse_p)) <: typeof(sparse_p)
+
+    #test lazy arrays
+    D = LazyArray(@~ exp.(1:N))
+    D_c = collect(D)
+    res_mul_lazy_1 = D .* av
+    res_mul_lazy_2 = av .* D
+    res_mul = av_c .* D_c
+    @test all(@. res_mul_lazy_1 ≈ res_mul)
+    @test all(@. res_mul_lazy_2 ≈ res_mul)
+
+    x_zero_dim = ZeroDimensionalVector(1)
+    res_lazy_1_zero_dim = x_zero_dim .* av
+    res_lazy_2_zero_dim = av .* x_zero_dim
+    @test all(@. res_lazy_1_zero_dim ≈ res_lazy_2_zero_dim)
+
+    #broken
+    x_zero_dim_r = Array{Float64, 0}(undef)
+    x_zero_dim_r .= 0
+    res_zero_d_r = @. x_zero_dim_r * av
+    res_zero_d = @. x_zero_dim_r * av_c
+    @test all(@. res_zero_d ≈ res_zero_d_r)
 end
 
 @testset "Zygote AlternateVector" begin
