@@ -17,6 +17,8 @@ function Base.getindex(x::AlternateVector, ind::Int)
     ifelse(isodd(ind), x.value_odd, x.value_even)
 end
 
+Base.getindex(x::AlternateVector, ::Colon) = x
+
 # AlternateVector is closed under getindex.
 function Base.getindex(A::AlternateVector, el::AbstractRange{T}) where {T <: Int}
     first_idx = el.start
@@ -32,19 +34,29 @@ end
 Base.showarg(io::IO, A::AlternateVector, _) = print(io, typeof(A))
 
 # Broacasting relation against other arrays
-const ArrayStyleAlternateVector = Broadcast.ArrayStyle{AlternateVector}
+# const ArrayStyleAlternateVector = Broadcast.ArrayStyle{AlternateVector}
+struct ArrayStyleAlternateVector <: Broadcast.AbstractArrayStyle{1} end
 Base.BroadcastStyle(::Type{<:AlternateVector{T}}) where {T} = ArrayStyleAlternateVector()
 Base.BroadcastStyle(::ArrayStyleAlternateVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
-Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::V) where {V <: Broadcast.AbstractArrayStyle{0}} = a
-Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.AbstractArrayStyle} = a
-Base.BroadcastStyle(a::ArrayStyleAlternateVector, ::V) where {V <: Broadcast.DefaultArrayStyle{0}} = a
-Base.BroadcastStyle(::ArrayStyleAlternateVector, a::V) where {V <: Broadcast.DefaultArrayStyle} = a
+function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
+    if (N > 0)
+        return b
+    end
+    return Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
+end
+function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
+    if (N > 0)
+        return b
+    end
+    return a
+end
 
 Base.BroadcastStyle(::ArrayStyleAlternateVector, ::SparseArrays.HigherOrderFns.SparseVecStyle) = SparseArrays.HigherOrderFns.PromoteToSparse()
 SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(::AlternateVector, rest...) = SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(rest...)
 
 #Broacasting over AlternateVector
 flatten_even(x) = x
+flatten_even(x::AbstractArray{T, 0}) where {T} = x[]
 flatten_even(x::Base.RefValue) = x.x
 flatten_odd(x) = flatten_even(x)
 flatten_even(x::AlternateVector) = x.value_even
