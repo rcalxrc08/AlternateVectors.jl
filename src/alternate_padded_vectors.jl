@@ -53,9 +53,6 @@ Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadca
 
 Base.BroadcastStyle(::ArrayStyleAlternateVector, a::ArrayStyleAlternatePaddedVector) = a
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::ArrayStyleAlternateVector) = a
-#Sparse
-Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::SparseArrays.HigherOrderFns.SparseVecStyle) = SparseArrays.HigherOrderFns.PromoteToSparse()
-SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(::AlternatePaddedVector, rest...) = SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(rest...)
 
 #Broacasting over AlternatePaddedVector
 apv_flatten_even(x) = x

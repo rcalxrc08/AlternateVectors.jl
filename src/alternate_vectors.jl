@@ -51,9 +51,6 @@ function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.DefaultA
     return a
 end
 
-Base.BroadcastStyle(::ArrayStyleAlternateVector, ::SparseArrays.HigherOrderFns.SparseVecStyle) = SparseArrays.HigherOrderFns.PromoteToSparse()
-SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(::AlternateVector, rest...) = SparseArrays.HigherOrderFns.is_supported_sparse_broadcast(rest...)
-
 #Broacasting over AlternateVector
 flatten_even(x) = x
 flatten_even(x::AbstractArray{T, 0}) where {T} = x[]

@@ -1,7 +1,6 @@
 using AlternateVectors
-using Test, Dates, ChainRulesCore, Zygote, LazyArrays
+using Test, Dates, ChainRulesCore, Zygote, LazyArrays, SparseArrays
 @show "Starting tests"
-using SparseArrays
 
 struct ZeroDimensionalVector{T} <: AbstractArray{T, 0}
     value::T
