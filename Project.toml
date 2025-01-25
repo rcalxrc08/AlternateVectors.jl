@@ -5,7 +5,6 @@ version = "0.1.1"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [weakdeps]
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
