@@ -34,6 +34,7 @@ function Base.BroadcastStyle(::ArrayStyleZeroDimVector, b::Broadcast.DefaultArra
 end
 
 @testset "AlternateVectors arithmetical operations closed" begin
+    @test_throws "length of AlternateVector must be greater than one." AlternateVector(1, 1, 1)
     N = 11
     av = AlternateVector(-2.0, 3.0, N)
     @test av[1] == -2.0
@@ -97,8 +98,8 @@ end
 @testset "arithmetical operations closed" begin
     N = 11
     av = AlternatePaddedVector(-2.0, 3.0, 2.0, 4.0, N)
-    @test_throws "length of AlternatePaddedVector must be greater than 1." AlternatePaddedVector(1, 1, 1, 1, 1)
-    @test_throws "Trying to getindex with an AbstractRange of length" av[1:1]
+    @test_throws "length of AlternatePaddedVector must be greater than three." AlternatePaddedVector(1, 1, 1, 1, 3)
+    @test_throws "Trying to getindex with an AbstractRange of length" av[1:3]
     @test av[1] == -2.0
     @test av[2] == 3.0
     @test av[3] == 2.0
@@ -108,7 +109,7 @@ end
     Base.showarg(Core.CoreSTDOUT(), av, nothing)
     println(av)
     av_c = collect(av)
-    @test typeof(av[1:2]) <: AlternatePaddedVector
+    @test typeof(av[1:1:5]) <: AlternatePaddedVector
     @test typeof(av[:]) <: AlternatePaddedVector
     @test typeof(1 .+ av) <: AlternatePaddedVector
     @test typeof(av .+ 1) <: AlternatePaddedVector
@@ -124,7 +125,8 @@ end
     @test all(@. av ≈ av_c)
     @test all(@. av[1:5] ≈ av_c[1:5])
     @test all(@. av[3:2:9] ≈ av_c[3:2:9])
-    @test all(@. av[8:9] ≈ av_c[8:9])
+    @test all(@. av[1:1:9] ≈ av_c[1:1:9])
+    @test all(@. av[4:9] ≈ av_c[4:9])
     @test all(@. sin(av) ≈ sin(av_c))
     @test all(@. exp(av) + av ≈ exp(av_c) + av_c)
     @test all(@. exp(av) + av + 2 ≈ exp(av_c) + av_c + 2)

@@ -4,7 +4,7 @@ struct AlternateVector{T} <: AbstractArray{T, 1}
     value_even::T
     n::Int64
     function AlternateVector(value_odd::T, value_even::T, n::Int64) where {T}
-        (0 <= n) || throw("length of AlternateVector must be greater than zero. Provided is $n.")
+        (2 <= n) || throw("length of AlternateVector must be greater than one. Provided is $n.")
         return new{T}(value_odd, value_even, n)
     end
 end
@@ -22,11 +22,12 @@ Base.getindex(x::AlternateVector, ::Colon) = x
 # AlternateVector is closed under getindex.
 function Base.getindex(A::AlternateVector, el::AbstractRange{T}) where {T <: Int}
     first_idx = el.start
+    new_len = length(el)
+    (2 <= new_len) || throw("Trying to getindex with an AbstractRange of length $n. Provided length must be greater than one.")
     @boundscheck (1 <= first_idx <= A.n) || throw(BoundsError(A, first_idx))
     @boundscheck (1 <= el.stop <= A.n) || throw(BoundsError(A, el.stop))
     @views @inbounds odd_value = A[first_idx]
     @views @inbounds even_value = A[first_idx+step(el)]
-    new_len = length(el)
     return AlternateVector(odd_value, even_value, new_len)
 end
 

@@ -6,5 +6,8 @@
 /docs/build/
 
 .vscode/
+Manifest.toml
 
 test/Manifest.toml
+
+page/__site

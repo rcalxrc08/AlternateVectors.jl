@@ -6,7 +6,7 @@ struct AlternatePaddedVector{T} <: AbstractArray{T, 1}
     bound_final_value::T
     n::Int64
     function AlternatePaddedVector(bound_initial_value::T, value_even::T, value_odd::T, bound_final_value::T, n::Int64) where {T}
-        (2 <= n) || throw("length of AlternatePaddedVector must be greater than 1. Provided is $n.")
+        (4 <= n) || throw("length of AlternatePaddedVector must be greater than three. Provided is $n.")
         return new{T}(bound_initial_value, value_even, value_odd, bound_final_value, n)
     end
 end
@@ -24,7 +24,7 @@ Base.getindex(x::AlternatePaddedVector, ::Colon) = x
 # AlternatePaddedVector is closed under getindex.
 function Base.getindex(A::AlternatePaddedVector, el::AbstractRange{T}) where {T <: Int}
     n = length(el)
-    (2 <= n) || throw("Trying to getindex with an AbstractRange of length $n. Provided length must be non smaller than 2.")
+    (4 <= n) || throw("Trying to getindex with an AbstractRange of length $n. Provided length must be greater than three.")
     first_idx = el.start
     @boundscheck (1 <= first_idx <= A.n) || throw(BoundsError(A, first_idx))
     @boundscheck (1 <= el.stop <= A.n) || throw(BoundsError(A, el.stop))
