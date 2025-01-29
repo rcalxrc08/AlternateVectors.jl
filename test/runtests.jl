@@ -1,6 +1,5 @@
 using AlternateVectors
 using Test, Dates, ChainRulesCore, Zygote, LazyArrays, SparseArrays
-@show "Starting tests"
 
 struct ZeroDimensionalVector{T} <: AbstractArray{T, 0}
     value::T
@@ -33,7 +32,7 @@ function Base.BroadcastStyle(::ArrayStyleZeroDimVector, b::Broadcast.DefaultArra
     return b
 end
 
-@testset "AlternateVectors arithmetical operations closed" begin
+@testset "AlternateVectors" begin
     @test_throws "length of AlternateVector must be greater than one." AlternateVector(1, 1, 1)
     N = 11
     av = AlternateVector(-2.0, 3.0, N)
@@ -87,7 +86,6 @@ end
     res_lazy_2_zero_dim = av .* x_zero_dim
     @test all(@. res_lazy_1_zero_dim ≈ res_lazy_2_zero_dim)
 
-    #broken
     x_zero_dim_r = Array{Float64, 0}(undef)
     x_zero_dim_r .= 0
     res_zero_d_r = @. x_zero_dim_r * av
@@ -95,7 +93,7 @@ end
     @test all(@. res_zero_d ≈ res_zero_d_r)
 end
 
-@testset "arithmetical operations closed" begin
+@testset "AlternatePaddedVector" begin
     N = 11
     av = AlternatePaddedVector(-2.0, 3.0, 2.0, 4.0, N)
     @test_throws "length of AlternatePaddedVector must be greater than three." AlternatePaddedVector(1, 1, 1, 1, 3)
@@ -163,12 +161,34 @@ end
     res_lazy_2_zero_dim = av .* x_zero_dim
     @test all(@. res_lazy_1_zero_dim ≈ res_lazy_2_zero_dim)
 
-    #broken
     x_zero_dim_r = Array{Float64, 0}(undef)
     x_zero_dim_r .= 0
     res_zero_d_r = @. x_zero_dim_r * av
     res_zero_d = @. x_zero_dim_r * av_c
     @test all(@. res_zero_d ≈ res_zero_d_r)
+end
+
+@testset "SparseArraysExt for AlternateVector" begin
+    @test_throws "length of AlternateVector must be greater than one." AlternateVector(1, 1, 1)
+    N = 11
+    av = AlternateVector(-2.0, 3.0, N)
+    av_c = collect(av)
+    #test sparse
+    sparse_p = spzeros(Float64, N)
+    sparse_p[1] = 4.0
+    @test typeof(sin.(av .* sparse_p)) <: typeof(sparse_p)
+    @test all(@. av * sparse_p ≈ av_c * sparse_p)
+end
+
+@testset "SparseArraysExt for AlternatePaddedVector" begin
+    N = 11
+    av = AlternatePaddedVector(-2.0, 3.0, 2.0, 4.0, N)
+    av_c = collect(av)
+    #test sparse
+    sparse_p = spzeros(Float64, N)
+    sparse_p[1] = 4.0
+    @test typeof(sin.(av .* sparse_p)) <: typeof(sparse_p)
+    @test all(@. av * sparse_p ≈ av_c * sparse_p)
 end
 
 @testset "Zygote AlternateVector" begin
@@ -207,4 +227,36 @@ end
     res_av = Zygote.gradient(f_av, x)
     res_std = Zygote.gradient(f_std, x)
     @test res_av[1] ≈ res_std[1]
+end
+
+@testset "Composite Broadcasting for AlternateVector" begin
+    N = 11
+    av = AlternateVector(-2.0, 4.0, N)
+    incr = 0
+    function scalar_f(x)
+        global incr += 1
+        return sin(x)
+    end
+    res = @. scalar_f(av)
+    @test incr == 2
+    incr = 0
+    av_c = collect(av)
+    res = @. scalar_f(av) * av_c
+    @test_broken incr == 2
+end
+
+@testset "Composite Broadcasting for AlternatePaddedVector" begin
+    N = 11
+    av = AlternatePaddedVector(-2.0, 3.0, 2.0, 4.0, N)
+    incr = 0
+    function scalar_f(x)
+        global incr += 1
+        return sin(x)
+    end
+    res = @. scalar_f(av)
+    @test incr == 4
+    incr = 0
+    av_c = collect(av)
+    res = @. scalar_f(av) * av_c
+    @test_broken incr == 4
 end
