@@ -232,7 +232,7 @@ end
 @testset "Composite Broadcasting for AlternateVector" begin
     N = 11
     av = AlternateVector(-2.0, 4.0, N)
-    incr = 0
+    global incr = 0
     function scalar_f(x)
         global incr += 1
         return sin(x)
@@ -248,7 +248,7 @@ end
 @testset "Composite Broadcasting for AlternatePaddedVector" begin
     N = 11
     av = AlternatePaddedVector(-2.0, 3.0, 2.0, 4.0, N)
-    incr = 0
+    global incr = 0
     function scalar_f(x)
         global incr += 1
         return sin(x)
