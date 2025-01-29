@@ -5,10 +5,14 @@ manifest_format = "2.0"
 project_hash = "b5d4b276d07741a3c2142dc659b407267d2692a4"
 
 [[deps.AlternateVectors]]
-deps = ["ChainRulesCore", "SparseArrays"]
-git-tree-sha1 = "699326f0b78d86afef10a9c312fcbbcb2e6cf06f"
+deps = ["ChainRulesCore"]
+git-tree-sha1 = "ec3b7f990ff99ef2726a389cd62e89965b52282f"
 uuid = "54ac12d0-05a3-433d-adfa-205158e8d514"
-version = "0.1.1"
+version = "0.1.2"
+weakdeps = ["SparseArrays"]
+
+    [deps.AlternateVectors.extensions]
+    SparseArraysExt = "SparseArrays"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
