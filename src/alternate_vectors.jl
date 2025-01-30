@@ -65,11 +65,21 @@ struct AlternateMixtureArrayStyle{T <: Base.Broadcast.BroadcastStyle} <: Base.Br
         return new{V}(mode)
     end
     function AlternateMixtureArrayStyle(style_1::V, style_2::U) where {V <: Base.Broadcast.BroadcastStyle, U <: Base.Broadcast.BroadcastStyle}
-        return AlternateMixtureArrayStyle(Base.BroadcastStyle(style_1, style_2))
+        style_implied_1 = Base.BroadcastStyle(style_1, style_2)
+        style_implied_2 = Base.BroadcastStyle(style_2, style_1)
+        style = ifelse(style_implied_1 == Base.Broadcast.Unknown(), style_implied_2, style_implied_1)
+        return AlternateMixtureArrayStyle(style)
     end
 end
 
 get_style(x::AlternateMixtureArrayStyle) = x.sub_style
+
+function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
+    if (N > 0)
+        return AlternateMixtureArrayStyle(b)
+    end
+    return a
+end
 
 function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
     if (N > 0)
@@ -78,12 +88,6 @@ function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.Abstract
     return Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
 end
 
-function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
-    if (N > 0)
-        return AlternateMixtureArrayStyle(b)
-    end
-    return a
-end
 function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::Broadcast.AbstractArrayStyle{N}) where {N}
     return AlternateMixtureArrayStyle(get_style(a), b)
 end
