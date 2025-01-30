@@ -111,8 +111,7 @@ function materialize_if_needed(bc)
 end
 
 function Base.materialize(bc::Base.Broadcast.Broadcasted{AlternateMixtureArrayStyle{T}, Nothing, <:F, <:R}) where {T, F, R}
-    args = bc.args
-    mat_args = materialize_if_needed.(args)
+    mat_args = materialize_if_needed.(bc.args)
     res = Base.materialize(Base.Broadcast.Broadcasted(get_style(bc.style), bc.f, mat_args))
     return res
 end

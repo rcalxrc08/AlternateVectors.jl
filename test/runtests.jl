@@ -131,6 +131,7 @@ end
     @test all(@. exp(av) + av_c ≈ exp(av_c) + av)
     @test all(@. exp(av) + av_c ≈ exp(av_c) + av_c)
     @test all(@. exp(av) + av_c + av * av_c ≈ exp(av_c) + av_c + av * av_c)
+    @test all(@. (exp(av) * av_c) + (av * av_c) ≈ exp(av_c) * av_c + av * av_c)
     @test all(@. exp(av) + av + av * av ≈ exp(av_c) + av_c + av * av_c)
     @test all(@. exp(av + sin(1 + av)) + av + av * av ≈ exp(av_c + sin(1 + av_c)) + av_c + av * av_c)
     @test sum(av) ≈ sum(av_c)
@@ -159,6 +160,9 @@ end
     x_zero_dim = ZeroDimensionalVector(1)
     res_lazy_1_zero_dim = x_zero_dim .* av
     res_lazy_2_zero_dim = av .* x_zero_dim
+    @test all(@. res_lazy_1_zero_dim ≈ res_lazy_2_zero_dim)
+    res_lazy_1_zero_dim = @. (av_c * av) * x_zero_dim
+    res_lazy_2_zero_dim = @. av_c * av * x_zero_dim
     @test all(@. res_lazy_1_zero_dim ≈ res_lazy_2_zero_dim)
 
     x_zero_dim_r = Array{Float64, 0}(undef)
