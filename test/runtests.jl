@@ -242,7 +242,7 @@ end
     incr = 0
     av_c = collect(av)
     res = @. scalar_f(av) * av_c
-    @test_broken incr == 2
+    @test incr == 2
 end
 
 @testset "Composite Broadcasting for AlternatePaddedVector" begin
@@ -258,5 +258,5 @@ end
     incr = 0
     av_c = collect(av)
     res = @. scalar_f(av) * av_c
-    @test_broken incr == 4
+    @test incr == 4
 end

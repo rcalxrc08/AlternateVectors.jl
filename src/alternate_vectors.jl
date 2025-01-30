@@ -39,18 +39,6 @@ Base.showarg(io::IO, A::AlternateVector, _) = print(io, typeof(A))
 struct ArrayStyleAlternateVector <: Broadcast.AbstractArrayStyle{1} end
 Base.BroadcastStyle(::Type{<:AlternateVector{T}}) where {T} = ArrayStyleAlternateVector()
 Base.BroadcastStyle(::ArrayStyleAlternateVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
-function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
-    if (N > 0)
-        return b
-    end
-    return Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
-end
-function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
-    if (N > 0)
-        return b
-    end
-    return a
-end
 
 #Broacasting over AlternateVector
 flatten_even(x) = x
@@ -68,6 +56,65 @@ function Base.materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternateVect
     odd_part = func(flatten_odd.(args)...)
     even_part = func(flatten_even.(args)...)
     return AlternateVector(odd_part, even_part, length(first(axes_result)))
+end
+
+#Optimization for broadcasting
+struct AlternateMixtureArrayStyle{T <: Base.Broadcast.BroadcastStyle} <: Base.Broadcast.BroadcastStyle
+    sub_style::T
+    function AlternateMixtureArrayStyle(mode::V) where {V <: Base.Broadcast.BroadcastStyle}
+        return new{V}(mode)
+    end
+    function AlternateMixtureArrayStyle(style_1::V, style_2::U) where {V <: Base.Broadcast.BroadcastStyle, U <: Base.Broadcast.BroadcastStyle}
+        return AlternateMixtureArrayStyle(Base.BroadcastStyle(style_1, style_2))
+    end
+end
+
+get_style(x::AlternateMixtureArrayStyle) = x.sub_style
+
+function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
+    if (N > 0)
+        return AlternateMixtureArrayStyle(b)
+    end
+    return Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
+end
+
+function Base.BroadcastStyle(a::ArrayStyleAlternateVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
+    if (N > 0)
+        return AlternateMixtureArrayStyle(b)
+    end
+    return a
+end
+function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::Broadcast.AbstractArrayStyle{N}) where {N}
+    return AlternateMixtureArrayStyle(get_style(a), b)
+end
+
+function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::Broadcast.DefaultArrayStyle{N}) where {N}
+    return AlternateMixtureArrayStyle(get_style(a), b)
+end
+function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, ::ArrayStyleAlternateVector)
+    return a
+end
+function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::AlternateMixtureArrayStyle)
+    return AlternateMixtureArrayStyle(get_style(a), get_style(b))
+end
+
+function materialize_if_needed(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternateVector, Nothing, <:F, <:R}) where {F, R}
+    return Base.materialize(bc)
+end
+
+function materialize_if_needed(bc::Base.Broadcast.Broadcasted{AlternateMixtureArrayStyle{T}, Nothing, <:F, <:R}) where {T, F, R}
+    return Base.materialize(bc)
+end
+
+function materialize_if_needed(bc)
+    return bc
+end
+
+function Base.materialize(bc::Base.Broadcast.Broadcasted{AlternateMixtureArrayStyle{T}, Nothing, <:F, <:R}) where {T, F, R}
+    args = bc.args
+    mat_args = materialize_if_needed.(args)
+    res = Base.materialize(Base.Broadcast.Broadcasted(get_style(bc.style), bc.f, mat_args))
+    return res
 end
 
 function Base.sum(x::AlternateVector)

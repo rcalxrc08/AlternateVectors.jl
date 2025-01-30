@@ -43,16 +43,35 @@ Base.showarg(io::IO, A::AlternatePaddedVector, _) = print(io, typeof(A))
 const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
 
 Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = ArrayStyleAlternatePaddedVector()
-Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.DefaultArrayStyle{0}) = a
-Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::Broadcast.AbstractArrayStyle{0}) = Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
+
 #Relation to tuples
 Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
-#Relation to same level Arrays
-Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadcast.AbstractArrayStyle} = a
-Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, a::V) where {V <: Broadcast.DefaultArrayStyle} = a
-
+#Relation to AlternateVector
 Base.BroadcastStyle(::ArrayStyleAlternateVector, a::ArrayStyleAlternatePaddedVector) = a
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::ArrayStyleAlternateVector) = a
+
+#Mixture
+function Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
+    if (N > 0)
+        return AlternateMixtureArrayStyle(b)
+    end
+    return a
+end
+
+function Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
+    if (N > 0)
+        return AlternateMixtureArrayStyle(b)
+    end
+    return Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
+end
+
+function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, ::ArrayStyleAlternatePaddedVector)
+    a
+end
+
+function materialize_if_needed(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
+    return Base.materialize(bc)
+end
 
 #Broacasting over AlternatePaddedVector
 apv_flatten_even(x) = x
@@ -86,20 +105,18 @@ end
 function Base.sum(x::AlternatePaddedVector)
     isfinalodd = isodd(x.n)
     nhalf = div(x.n, 2) - 1
-    return muladd(nhalf, x.value_odd, (nhalf + isfinalodd) * x.value_even + x.bound_initial_value + x.bound_final_value)
+    return muladd(nhalf, x.value_odd, muladd(x.value_even, nhalf + isfinalodd, x.bound_initial_value + x.bound_final_value))
 end
 
 using ChainRulesCore
 function ChainRulesCore.rrule(::Type{AlternatePaddedVector}, bound_initial_value::T, value_even::T, value_odd::T, bound_final_value::T, n::Int64) where {T}
     function AlternatePaddedVector_pb_ext(Δapv)
-        #The following should break some CUDA example.
         bd_val_v = AlternatePaddedVector(one(T), zero(T), zero(T), zero(T), n)
         der_bound_initial_value = sum(Δapv .* bd_val_v)
         odd_v = AlternatePaddedVector(zero(T), zero(T), one(T), zero(T), n)
         odd_der = sum(odd_v .* Δapv)
         even_v = AlternatePaddedVector(zero(T), one(T), zero(T), zero(T), n)
         even_der = sum(even_v .* Δapv)
-        #The following should break some CUDA example.
         der_bound_final_value = sum(Δapv) - even_der - odd_der - der_bound_initial_value
         NoTangent(), der_bound_initial_value, even_der, odd_der, der_bound_final_value, NoTangent()
     end
