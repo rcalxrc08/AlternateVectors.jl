@@ -156,6 +156,9 @@ end
     res_mul = av_c .* D_c
     @test all(@. res_mul_lazy_1 ≈ res_mul)
     @test all(@. res_mul_lazy_2 ≈ res_mul)
+    res_mul_lazy_1 = @. exp(av * av_c) + av * D * av * av_c + D * av
+    res_mul_lazy_2 = @. exp(av_c * av_c) + av_c * D * av_c * av_c + D * av_c
+    @test all(@. res_mul_lazy_1 ≈ res_mul_lazy_2)
 
     x_zero_dim = ZeroDimensionalVector(1)
     res_lazy_1_zero_dim = x_zero_dim .* av
