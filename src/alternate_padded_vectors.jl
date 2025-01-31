@@ -1,4 +1,4 @@
-
+#Implementation of the concrete class AlternatePaddedVector
 struct AlternatePaddedVector{T} <: AbstractAlternateVector{T}
     bound_initial_value::T
     value_even::T
@@ -34,11 +34,7 @@ end
 
 # const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
 struct ArrayStyleAlternatePaddedVector <: AbstractArrayStyleAlternateVector end
-
 Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = ArrayStyleAlternatePaddedVector()
-
-#Relation to tuples
-Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::Base.Broadcast.Style{Tuple}) = Broadcast.DefaultArrayStyle{1}()
 #Relation to AlternateVector
 Base.BroadcastStyle(::ArrayStyleAlternateVector, a::ArrayStyleAlternatePaddedVector) = a
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::ArrayStyleAlternateVector) = a
