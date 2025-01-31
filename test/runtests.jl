@@ -204,7 +204,7 @@ end
         av = AlternateVector(x, -8.2 * x, N)
         return sum(av)
     end
-    function f_std(x)
+    function f_std_av(x)
         N = 11
         one_minus_one = ChainRulesCore.@ignore_derivatives @. ifelse(isodd(1:N), 1.0, -8.2)
         av = one_minus_one .* x
@@ -212,7 +212,7 @@ end
     end
     x = 3.2
     res_av = Zygote.gradient(f_av, x)
-    res_std = Zygote.gradient(f_std, x)
+    res_std = Zygote.gradient(f_std_av, x)
     @test res_av[1] ≈ res_std[1]
 end
 
@@ -222,7 +222,7 @@ end
         av = AlternatePaddedVector(x, -8.2 * x, -5.6 * x, 0.2 * x, N)
         return sum(av)
     end
-    function f_std(x)
+    function f_std_apv(x)
         N = 11
         one_minus_one = ChainRulesCore.@ignore_derivatives @. ifelse(isodd(1:N), -5.6, -8.2)
         ChainRulesCore.@ignore_derivatives one_minus_one[1] = 1.0
@@ -232,7 +232,7 @@ end
     end
     x = 3.2
     res_av = Zygote.gradient(f_av, x)
-    res_std = Zygote.gradient(f_std, x)
+    res_std = Zygote.gradient(f_std_apv, x)
     @test res_av[1] ≈ res_std[1]
 end
 
@@ -240,15 +240,15 @@ end
     N = 11
     av = AlternateVector(-2.0, 4.0, N)
     global incr = 0
-    function scalar_f(x)
+    function scalar_f_av(x)
         global incr += 1
         return sin(x)
     end
-    res = @. scalar_f(av)
+    res = @. scalar_f_av(av)
     @test incr == 2
     incr = 0
     av_c = collect(av)
-    res = @. scalar_f(av) * av_c
+    res = @. scalar_f_av(av) * av_c
     @test incr == 2
 end
 

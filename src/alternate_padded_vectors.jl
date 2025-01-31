@@ -1,5 +1,5 @@
 
-struct AlternatePaddedVector{T} <: AbstractArray{T, 1}
+struct AlternatePaddedVector{T} <: AbstractAlternateVector{T}
     bound_initial_value::T
     value_even::T
     value_odd::T
@@ -11,15 +11,10 @@ struct AlternatePaddedVector{T} <: AbstractArray{T, 1}
     end
 end
 
-### Implementation of the array interface
-Base.size(A::AlternatePaddedVector) = (A.n,)
-
 function Base.getindex(x::AlternatePaddedVector, ind::Int)
     @boundscheck (1 <= ind <= x.n) || throw(BoundsError(x, ind))
     ifelse(ind == 1, x.bound_initial_value, ifelse(ind == x.n, x.bound_final_value, ifelse(isodd(ind), x.value_odd, x.value_even)))
 end
-
-Base.getindex(x::AlternatePaddedVector, ::Colon) = x
 
 # AlternatePaddedVector is closed under getindex.
 function Base.getindex(A::AlternatePaddedVector, el::AbstractRange{T}) where {T <: Int}
@@ -37,10 +32,8 @@ function Base.getindex(A::AlternatePaddedVector, el::AbstractRange{T}) where {T 
     return AlternatePaddedVector(bound_initial_value, even_value, odd_value, bound_final_value, n)
 end
 
-# IO
-Base.showarg(io::IO, A::AlternatePaddedVector, _) = print(io, typeof(A))
-
-const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
+# const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
+struct ArrayStyleAlternatePaddedVector <: AbstractArrayStyleAlternateVector end
 
 Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = ArrayStyleAlternatePaddedVector()
 
@@ -49,29 +42,6 @@ Base.BroadcastStyle(::ArrayStyleAlternatePaddedVector, ::Base.Broadcast.Style{Tu
 #Relation to AlternateVector
 Base.BroadcastStyle(::ArrayStyleAlternateVector, a::ArrayStyleAlternatePaddedVector) = a
 Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, ::ArrayStyleAlternateVector) = a
-
-#Mixture
-function Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
-    if (N > 0)
-        return AlternateMixtureArrayStyle(b)
-    end
-    return a
-end
-
-function Base.BroadcastStyle(a::ArrayStyleAlternatePaddedVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
-    if (N > 0)
-        return AlternateMixtureArrayStyle(b)
-    end
-    return Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
-end
-
-function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, ::ArrayStyleAlternatePaddedVector)
-    a
-end
-
-function materialize_if_needed(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
-    return Base.materialize(bc)
-end
 
 #Broacasting over AlternatePaddedVector
 apv_flatten_even(x) = x
