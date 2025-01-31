@@ -32,7 +32,6 @@ function Base.getindex(A::AlternatePaddedVector, el::AbstractRange{T}) where {T 
     return AlternatePaddedVector(bound_initial_value, even_value, odd_value, bound_final_value, n)
 end
 
-# const ArrayStyleAlternatePaddedVector = Broadcast.ArrayStyle{AlternatePaddedVector}
 struct ArrayStyleAlternatePaddedVector <: AbstractArrayStyleAlternateVector end
 Base.BroadcastStyle(::Type{<:AlternatePaddedVector{T}}) where {T} = ArrayStyleAlternatePaddedVector()
 #Relation to AlternateVector
