@@ -1,5 +1,5 @@
   9.267 μs (0 allocations: 0 bytes)
   9.267 μs (0 allocations: 0 bytes)
-  5.538 μs (6 allocations: 156.38 KiB)
-  11.511 μs (2 allocations: 78.16 KiB)
-  2.986 μs (3 allocations: 78.19 KiB)
+  5.827 μs (6 allocations: 156.38 KiB)
+  11.751 μs (2 allocations: 78.16 KiB)
+  3.460 μs (3 allocations: 78.19 KiB)
