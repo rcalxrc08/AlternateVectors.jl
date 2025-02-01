@@ -25,6 +25,14 @@ function materialize_if_needed(bc::Base.Broadcast.Broadcasted{T, Nothing, <:F, <
     return Base.materialize(bc)
 end
 
+function exclude_unknown_style_if_possible(::Base.Broadcast.Unknown, style_1::V, style_2::U) where {V <: Base.Broadcast.BroadcastStyle, U <: Base.Broadcast.BroadcastStyle}
+    Base.BroadcastStyle(style_2, style_1)
+end
+
+function exclude_unknown_style_if_possible(first::L, ::V, ::U) where {L <: Base.Broadcast.BroadcastStyle, V <: Base.Broadcast.BroadcastStyle, U <: Base.Broadcast.BroadcastStyle}
+    first
+end
+
 #Optimization for broadcasting
 struct AlternateMixtureArrayStyle{T <: Base.Broadcast.BroadcastStyle} <: Base.Broadcast.BroadcastStyle
     sub_style::T
@@ -33,13 +41,12 @@ struct AlternateMixtureArrayStyle{T <: Base.Broadcast.BroadcastStyle} <: Base.Br
     end
     function AlternateMixtureArrayStyle(style_1::V, style_2::U) where {V <: Base.Broadcast.BroadcastStyle, U <: Base.Broadcast.BroadcastStyle}
         style_implied_1 = Base.BroadcastStyle(style_1, style_2)
-        style_implied_2 = Base.BroadcastStyle(style_2, style_1)
-        style = ifelse(style_implied_1 == Base.Broadcast.Unknown(), style_implied_2, style_implied_1)
+        style = exclude_unknown_style_if_possible(style_implied_1, style_1, style_2)
         return AlternateMixtureArrayStyle(style)
     end
 end
 
-get_style(x::AlternateMixtureArrayStyle) = x.sub_style
+const get_style = x::AlternateMixtureArrayStyle -> x.sub_style
 
 function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::Broadcast.AbstractArrayStyle{N}) where {N}
     return AlternateMixtureArrayStyle(get_style(a), b)
