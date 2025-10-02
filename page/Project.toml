@@ -1,7 +1,10 @@
 [deps]
+AlternateVectors = "54ac12d0-05a3-433d-adfa-205158e8d514"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Franklin = "713c75ef-9fc9-4b05-94a9-213340da978e"
 NodeJS = "2bd173c7-0d6d-553b-b6af-13a54713934c"
 PkgPage = "e7214860-93a8-4f22-b43d-bd447d1a2094"
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-AlternateVectors = "54ac12d0-05a3-433d-adfa-205158e8d514"
+
+[compat]
+PkgPage = "0.4"
