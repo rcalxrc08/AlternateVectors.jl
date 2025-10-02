@@ -2,7 +2,7 @@
 
 julia_version = "1.11.7"
 manifest_format = "2.0"
-project_hash = "b5d4b276d07741a3c2142dc659b407267d2692a4"
+project_hash = "a74ab8f8295cebfba641ee21b3e79f33383f0428"
 
 [[deps.AlternateVectors]]
 deps = ["ChainRulesCore"]
