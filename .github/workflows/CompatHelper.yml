@@ -28,7 +28,7 @@ jobs:
           my_registries = [Pkg.RegistrySpec(name = "General",
                                   uuid = "23338594-aafe-5451-b93e-139f81909106",
                                   url = "https://github.com/JuliaRegistries/General.git")]
-          CompatHelper.main(; subdirs=["","test"], registries=my_registries)
+          CompatHelper.main(; subdirs=["","test","page"], registries=my_registries)
         shell: julia --color=yes {0}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
