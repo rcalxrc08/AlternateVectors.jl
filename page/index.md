@@ -3,7 +3,7 @@
     ============================== -->
 \begin{section}{title="About this Package", name="About"}
 \lead{AlternateVectors.jl is a Julia package containing some useful array representation for peculiar one dimensional arrays patterns.}
-It currently contains the following immutable types:
+It currently contains the following types:
 
 - AlternateVector: convenient representation for vectors of the form:
 	`````
