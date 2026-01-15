@@ -32,6 +32,28 @@ function Base.BroadcastStyle(::ArrayStyleZeroDimVector, b::Broadcast.DefaultArra
     return b
 end
 
+
+function min_over_max(x,y)
+	z=x/y
+	return min(z,inv(z))
+end
+
+function complex_aggregator(x)
+	corr=0.3;
+	N=length(x);
+	res=@views zero(x[1])
+	for i in 1:N
+		x_i=@views x[i]
+		res_in=x_i
+		for j in (i+1):N
+			x_j=@views x[j]
+			@. res_in+=x_j*min_over_max(x_i,x_j)
+		end
+		@. res+=corr*x_i*res_in
+	end
+	return res
+end
+
 @testset "AlternateVectors" begin
     @test_throws "length of AlternateVector must be greater than one." AlternateVector(1, 1, 1)
     N = 11
@@ -91,6 +113,19 @@ end
     res_zero_d_r = @. x_zero_dim_r * av
     res_zero_d = @. x_zero_dim_r * av_c
     @test all(@. res_zero_d ≈ res_zero_d_r)
+end
+
+@testset "AlternateVector Mutability" begin
+	N=15;
+	x_av=Vector{AlternateVector{Float64}}(undef,N);
+	x=Vector{Vector{Float64}}(undef,N);
+	for i in 1:N
+		x_av[i]=AlternateVector(2.0,-1.0,20);
+		x[i]=collect(x_av[i])
+	end
+	res_av=complex_aggregator(x_av)
+	res=complex_aggregator(x)
+	@test all(@. res_av ≈ res)
 end
 
 @testset "AlternatePaddedVector" begin
@@ -173,6 +208,20 @@ end
     res_zero_d_r = @. x_zero_dim_r * av
     res_zero_d = @. x_zero_dim_r * av_c
     @test all(@. res_zero_d ≈ res_zero_d_r)
+end
+
+
+@testset "AlternatePaddedVector Mutability" begin
+	N=15;
+	x_av=Vector{AlternatePaddedVector{Float64}}(undef,N);
+	x=Vector{Vector{Float64}}(undef,N);
+	for i in 1:N
+		x_av[i]=AlternatePaddedVector(2.0,-1.0,0.2,0.9,20);
+		x[i]=collect(x_av[i])
+	end
+	res_av=complex_aggregator(x_av)
+	res=complex_aggregator(x)
+	@test all(@. res_av ≈ res)
 end
 
 @testset "SparseArraysExt for AlternateVector" begin

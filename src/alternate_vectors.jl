@@ -1,8 +1,8 @@
 #Implementation of the concrete class AlternateVector
-struct AlternateVector{T} <: AbstractAlternateVector{T}
+mutable struct AlternateVector{T} <: AbstractAlternateVector{T}
     value_odd::T
     value_even::T
-    n::Int64
+    const n::Int64
     function AlternateVector(value_odd::T, value_even::T, n::Int64) where {T}
         (2 <= n) || throw("length of AlternateVector must be greater than one. Provided is $n.")
         return new{T}(value_odd, value_even, n)
@@ -45,6 +45,31 @@ function Base.materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternateVect
     odd_part = func(flatten_odd.(args)...)
     even_part = func(flatten_even.(args)...)
     return AlternateVector(odd_part, even_part, length(first(axes_result)))
+end
+
+
+function internal_fill!(dest::AlternateVector{T},el_odd::T,el_even::T) where {T}
+	dest.value_odd = el_odd
+    dest.value_even = el_even
+    return dest
+end
+
+function Base.materialize!(dest::AlternateVector, bc::Base.Broadcast.Broadcasted{AlternateVectors.ArrayStyleAlternateVector, Nothing, <:F, <:R}) where {F, R}
+    bc_f = Broadcast.flatten(bc)
+    func = bc_f.f
+    args = bc_f.args
+    axes_result = Broadcast.combine_axes(args...)
+	internal_fill!(dest,func(AlternateVectors.flatten_odd.(args)...),func(AlternateVectors.flatten_even.(args)...))
+    return dest
+end
+
+Base.similar(a::AlternateVector, ::Type{T}, dims::Dims{1}) where {T}    = AlternateVector(zero(T),zero(T), dims[1])
+
+
+function Base.fill!(x::AlternateVector{T},el) where {T}
+	el_T=T(el)
+	internal_fill!(x,el_T,el_T)
+	return x
 end
 
 function Base.sum(x::AlternateVector)
