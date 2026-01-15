@@ -118,7 +118,7 @@ padding-right:  10px;
   <div class="container">
     <div class="row">
       <div class="col-lg-10 mx-auto">
-        <h2>About this Package</h2> <div class="lead">AlternateVectors.jl is a Julia package containing some useful array representation for peculiar one dimensional arrays patterns.</div> It currently contains the following immutable types:</p>
+        <h2>About this Package</h2> <div class="lead">AlternateVectors.jl is a Julia package containing some useful array representation for peculiar one dimensional arrays patterns.</div> It currently contains the following types:</p>
 <ul>
 <li><p>AlternateVector: convenient representation for vectors of the form:</p>
 </li>
@@ -242,16 +242,16 @@ x=AlternateVector(<span class="hljs-number">0.2</span>,<span class="hljs-number"
 y=randn(<span class="hljs-number">10</span>)
 z=AlternatePaddedVector(<span class="hljs-number">0.2</span>,-<span class="hljs-number">2.0</span>,<span class="hljs-number">4.0</span>,<span class="hljs-number">2.3</span>,<span class="hljs-number">10</span>)
 @. sin(x)*y+z</code></pre><pre><code class="plaintext hljs">10-element Vector{Float64}:
-  0.11264438856997873
- -1.1728767974702465
-  4.103405144818822
- -2.4964079410090805
-  3.8909867131800806
- -2.3011946638156933
-  4.110648917059564
- -3.0588779459722897
-  3.7771697342873516
-  1.9853706006912881</code></pre>
+ -0.34264967611327396
+ -1.454092706796136
+  3.4738546850756196
+ -1.721670159410837
+  3.9633259856652563
+ -2.681696992369194
+  3.8959400963091273
+ -1.4281267174359469
+  3.9454458268183967
+  2.129820728865762</code></pre>
 <p>      </div>
     </div>
   </div>
@@ -268,8 +268,8 @@ x=AlternateVector(<span class="hljs-number">0.2</span>,<span class="hljs-number"
 y=randn(n)
 x_c=collect(x)
 <span class="hljs-meta">@btime</span> @. $x*$y;
-<span class="hljs-meta">@btime</span> @. $x_c*$y;</code></pre><pre><code class="plaintext hljs">  2.937 μs (3 allocations: 78.20 KiB)
-  3.464 μs (3 allocations: 78.20 KiB)
+<span class="hljs-meta">@btime</span> @. $x_c*$y;</code></pre><pre><code class="plaintext hljs">  2.769 μs (3 allocations: 78.20 KiB)
+  3.269 μs (3 allocations: 78.20 KiB)
 </code></pre>
 <p><strong><em>Flipping sign based on index and sum</em></strong></p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> AlternateVectors, BenchmarkTools, LinearAlgebra
@@ -323,10 +323,10 @@ f_x=@. sin(x)+x*cos(x)
 <span class="hljs-meta">@btime</span> f_std_vec($f_x);
 <span class="hljs-meta">@btime</span> f_std_vec_linear_algebra($f_x);
 <span class="hljs-meta">@btime</span> f_apv($f_x);</code></pre><pre><code class="plaintext hljs">  9.257 μs (0 allocations: 0 bytes)
-  9.267 μs (0 allocations: 0 bytes)
-  6.960 μs (6 allocations: 156.39 KiB)
-  12.914 μs (2 allocations: 78.16 KiB)
-  3.671 μs (3 allocations: 78.20 KiB)
+  9.257 μs (0 allocations: 0 bytes)
+  6.202 μs (6 allocations: 156.39 KiB)
+  12.423 μs (2 allocations: 78.16 KiB)
+  3.502 μs (4 allocations: 78.23 KiB)
 </code></pre>
 <p><strong><em>Simpson Integration</em></strong></p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> AlternateVectors, BenchmarkTools,LinearAlgebra
@@ -373,11 +373,11 @@ f_x2=@. sin(x2)+x2*cos(x2)
 <span class="hljs-meta">@btime</span> f_simpson_std_vec($f_x2);
 <span class="hljs-meta">@btime</span> f_simpson_std_vec_linear_algebra($f_x2);
 <span class="hljs-meta">@btime</span> f_simpson_apv($f_x2);
-<span class="hljs-meta">@btime</span> f_simpson_apv_linear_algebra($f_x2);</code></pre><pre><code class="plaintext hljs">  9.257 μs (0 allocations: 0 bytes)
-  6.970 μs (6 allocations: 156.39 KiB)
-  4.105 μs (3 allocations: 78.20 KiB)
-  4.036 μs (3 allocations: 78.20 KiB)
-  9.277 μs (0 allocations: 0 bytes)
+<span class="hljs-meta">@btime</span> f_simpson_apv_linear_algebra($f_x2);</code></pre><pre><code class="plaintext hljs">  9.267 μs (0 allocations: 0 bytes)
+  6.081 μs (6 allocations: 156.39 KiB)
+  3.675 μs (3 allocations: 78.20 KiB)
+  4.052 μs (4 allocations: 78.24 KiB)
+  9.287 μs (1 allocation: 48 bytes)
 </code></pre>
 <p>To be noticed the performance improvements thanks to the usage of AlternatePaddedVector, and to be noticed that the first function proposed is not compatible with the CUDA.jl stack.</p>
 <p>      </div>
