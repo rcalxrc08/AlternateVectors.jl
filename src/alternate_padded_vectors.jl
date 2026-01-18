@@ -1,10 +1,10 @@
 #Implementation of the concrete class AlternatePaddedVector
-mutable struct AlternatePaddedVector{T} <: AbstractAlternateVector{T}
+struct AlternatePaddedVector{T} <: AbstractAlternateVector{T}
     bound_initial_value::T
     value_even::T
     value_odd::T
     bound_final_value::T
-    const n::Int64
+    n::Int64
     function AlternatePaddedVector(bound_initial_value::T, value_even::T, value_odd::T, bound_final_value::T, n::Int64) where {T}
         (4 <= n) || throw("length of AlternatePaddedVector must be greater than three. Provided is $n.")
         return new{T}(bound_initial_value, value_even, value_odd, bound_final_value, n)
@@ -55,7 +55,7 @@ apv_flatten_odd(x::AlternateVector) = x.value_odd
 apv_flatten_even(x::AlternateVector) = x.value_even
 apv_flatten_final(x::AlternateVector) = @views x[end]
 
-function Base.materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
+function inner_materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
     bc_f = Broadcast.flatten(bc)
     func = bc_f.f
     args = bc_f.args
@@ -64,34 +64,13 @@ function Base.materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternatePadd
     even_part = func(apv_flatten_even.(args)...)
     odd_part = func(apv_flatten_odd.(args)...)
     fin_part = func(apv_flatten_final.(args)...)
-    return AlternatePaddedVector(in_part, even_part, odd_part, fin_part, length(first(axes_result)))
+    return in_part, even_part, odd_part, fin_part, length(first(axes_result))
 end
 
-function internal_fill!(dest::AlternatePaddedVector{T},el_in::T,el_even::T,el_odd::T,el_fin::T) where {T}
-	dest.bound_initial_value = el_in
-	dest.value_even = el_even
-	dest.value_odd = el_odd
-	dest.bound_final_value = el_fin
-    return dest
+function Base.materialize(bc::Base.Broadcast.Broadcasted{ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
+    in_part, even_part, odd_part, fin_part, length_first_axes_result = inner_materialize(bc)
+    return AlternatePaddedVector(in_part, even_part, odd_part, fin_part, length_first_axes_result)
 end
-
-function Base.materialize!(dest::AlternatePaddedVector, bc::Base.Broadcast.Broadcasted{AlternateVectors.ArrayStyleAlternatePaddedVector, Nothing, <:F, <:R}) where {F, R}
-	bc_f = Broadcast.flatten(bc)
-    func = bc_f.f
-    args = bc_f.args
-    axes_result = Broadcast.combine_axes(args...)
-	internal_fill!(dest,func(apv_flatten_initial.(args)...),func(apv_flatten_even.(args)...),func(apv_flatten_odd.(args)...),func(apv_flatten_final.(args)...))
-    return dest
-end
-
-Base.similar(a::AlternatePaddedVector, ::Type{T}, dims::Dims{1}) where {T}    = AlternatePaddedVector(zero(T),zero(T),zero(T),zero(T), dims[1])
-
-function Base.fill!(x::AlternatePaddedVector{T},el) where {T}
-	el_T=T(el)
-	internal_fill!(x,el_T,el_T,el_T,el_T)
-	return x
-end
-
 
 function Base.sum(x::AlternatePaddedVector)
     isfinalodd = isodd(x.n)
