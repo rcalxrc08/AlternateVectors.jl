@@ -236,6 +236,37 @@ end
     @test res_av[1] ≈ res_std[1]
 end
 
+@testset "Zygote AlternatePaddedVector Deep" begin
+	function scalar_f2(x,y,z,k)
+		return sin(x+y)*z*exp(k)
+	end
+    function f_av2(x)
+        N = 11
+        av = AlternatePaddedVector(x, -8.2 * x, -5.6 * x, 0.2 * x, N)
+		x1=ones(N)
+		x2=@. cos(x1);
+		x3=@. cos(x2);
+		res=@. scalar_f2(av,x1,x2,x3)
+        return sum(res)
+    end
+    function f_std_apv2(x)
+        N = 11
+        one_minus_one = ChainRulesCore.@ignore_derivatives @. ifelse(isodd(1:N), -5.6, -8.2)
+        ChainRulesCore.@ignore_derivatives one_minus_one[1] = 1.0
+        ChainRulesCore.@ignore_derivatives one_minus_one[end] = 0.2
+        av = one_minus_one .* x
+        x1=ones(N)
+		x2=@. cos(x1);
+		x3=@. cos(x2);
+		res=@. scalar_f2(av,x1,x2,x3)
+        return sum(res)
+    end
+    x = 3.2
+    res_av = Zygote.gradient(f_av2, x)
+    res_std = Zygote.gradient(f_std_apv2, x)
+    @test res_av[1] ≈ res_std[1]
+end
+
 @testset "Composite Broadcasting for AlternateVector" begin
     N = 11
     av = AlternateVector(-2.0, 4.0, N)

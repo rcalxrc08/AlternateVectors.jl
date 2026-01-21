@@ -27,15 +27,15 @@ Base.BroadcastStyle(::AbstractArrayStyleAlternateVector, ::Base.Broadcast.Style{
 # Determines the broadcast style when combining AbstractArrayStyleAlternateVector with a DefaultArrayStyle of any dimension.
 function Base.BroadcastStyle(a::AbstractArrayStyleAlternateVector, b::Broadcast.DefaultArrayStyle{N}) where {N}
     if (N > 0)
-        return AlternateMixtureArrayStyle(b)
+        return AlternateMixtureArrayStyle{N, Broadcast.DefaultArrayStyle{N}}()
     end
     return a
 end
 
 # Determines the broadcast style when combining AbstractArrayStyleAlternateVector with a general AbstractArrayStyle of any dimension.
-function Base.BroadcastStyle(a::AbstractArrayStyleAlternateVector, b::Broadcast.AbstractArrayStyle{N}) where {N}
+function Base.BroadcastStyle(a::AbstractArrayStyleAlternateVector, b::T) where {T <: Broadcast.AbstractArrayStyle{N}} where {N}
     if (N > 0)
-        return AlternateMixtureArrayStyle(b)
+        return AlternateMixtureArrayStyle{N, T}()
     end
     return Base.BroadcastStyle(a, Broadcast.DefaultArrayStyle{0}())
 end
@@ -58,24 +58,27 @@ end
 # Optimization for broadcasting
 
 # Represents a broadcast style that mixes two other broadcast styles.
-struct AlternateMixtureArrayStyle{T <: Base.Broadcast.BroadcastStyle} <: Base.Broadcast.BroadcastStyle
-    sub_style::T
+abstract type AbstractAlternateMixtureArrayStyle{N} <: Broadcast.AbstractArrayStyle{N} end
 
+struct AlternateMixtureArrayStyle{N, T} <: AbstractAlternateMixtureArrayStyle{N}
     # Construct from a single broadcast style.
-    function AlternateMixtureArrayStyle(mode::V) where {V <: Base.Broadcast.BroadcastStyle}
-        return new{V}(mode)
+    function AlternateMixtureArrayStyle{N, V}() where {V <: Broadcast.AbstractArrayStyle{N}} where {N}
+        return new{N, V}()
     end
-
+    function AlternateMixtureArrayStyle{V}() where {V <: Broadcast.AbstractArrayStyle{N}} where {N}
+        return new{N, V}()
+    end
     # Construct by mixing two broadcast styles, resolving Unknown if possible.
     function AlternateMixtureArrayStyle(style_1::V, style_2::U) where {V <: Base.Broadcast.BroadcastStyle, U <: Base.Broadcast.BroadcastStyle}
         style_implied_1 = Base.BroadcastStyle(style_1, style_2)
         style = exclude_unknown_style_if_possible(style_implied_1, style_1, style_2)
-        return AlternateMixtureArrayStyle(style)
+        return AlternateMixtureArrayStyle{typeof(style)}()
     end
 end
 
-# Helper to extract the sub-style from an AlternateMixtureArrayStyle.
-const get_style = x::AlternateMixtureArrayStyle -> x.sub_style
+function get_style(x::AlternateMixtureArrayStyle{N, T}) where {T, N}
+    return T()
+end
 
 # BroadcastStyle rules for AlternateMixtureArrayStyle
 
@@ -89,10 +92,10 @@ function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::Broadcast.Default
     return AlternateMixtureArrayStyle(get_style(a), b)
 end
 
-# Combine AlternateMixtureArrayStyle with AbstractArrayStyleAlternateVector, return a.
-function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, ::AbstractArrayStyleAlternateVector)
-    return a
-end
+# # Combine AlternateMixtureArrayStyle with AbstractArrayStyleAlternateVector, return a.
+# function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, ::AbstractArrayStyleAlternateVector)
+#     return a
+# end
 
 # Combine two AlternateMixtureArrayStyle objects by mixing their sub-styles.
 function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::AlternateMixtureArrayStyle)
@@ -100,7 +103,7 @@ function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::AlternateMixtureA
 end
 
 # Materialize broadcasted objects with AlternateMixtureArrayStyle.
-function materialize_if_needed(bc::Base.Broadcast.Broadcasted{AlternateMixtureArrayStyle{T}, Nothing, <:F, <:R}) where {T, F, R}
+function materialize_if_needed(bc::Base.Broadcast.Broadcasted{AlternateMixtureArrayStyle{N, T}, Nothing, <:F, <:R}) where {N, T, F, R}
     return Base.materialize(bc)
 end
 
@@ -110,7 +113,7 @@ function materialize_if_needed(bc)
 end
 
 # Materialize a broadcasted object with AlternateMixtureArrayStyle, materializing all arguments as needed.
-function Base.materialize(bc::Base.Broadcast.Broadcasted{AlternateMixtureArrayStyle{T}, Nothing, <:F, <:R}) where {T, F, R}
+function Base.materialize(bc::Base.Broadcast.Broadcasted{AlternateMixtureArrayStyle{N, T}, Nothing, <:F, <:R}) where {N, T, F, R}
     mat_args = materialize_if_needed.(bc.args)
     res = Base.materialize(Base.Broadcast.Broadcasted(get_style(bc.style), bc.f, mat_args))
     return res
