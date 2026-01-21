@@ -76,7 +76,7 @@ struct AlternateMixtureArrayStyle{N, T} <: AbstractAlternateMixtureArrayStyle{N}
     end
 end
 
-function get_style(x::AlternateMixtureArrayStyle{N, T}) where {T, N}
+function get_style(::AlternateMixtureArrayStyle{N, T}) where {T, N}
     return T()
 end
 
@@ -91,11 +91,6 @@ end
 function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::Broadcast.DefaultArrayStyle{N}) where {N}
     return AlternateMixtureArrayStyle(get_style(a), b)
 end
-
-# # Combine AlternateMixtureArrayStyle with AbstractArrayStyleAlternateVector, return a.
-# function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, ::AbstractArrayStyleAlternateVector)
-#     return a
-# end
 
 # Combine two AlternateMixtureArrayStyle objects by mixing their sub-styles.
 function Base.BroadcastStyle(a::AlternateMixtureArrayStyle, b::AlternateMixtureArrayStyle)
