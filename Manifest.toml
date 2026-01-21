@@ -6,9 +6,9 @@ project_hash = "f605306c49c87ae3865fe00b59ec133bd03b61ac"
 
 [[deps.AlternateVectors]]
 deps = ["ChainRulesCore"]
-git-tree-sha1 = "192f2ad2c4269e7e7b9e2303b24b266d6cbac4bb"
+git-tree-sha1 = "064960973c27984c59531000d8020540aa9318af"
 uuid = "54ac12d0-05a3-433d-adfa-205158e8d514"
-version = "0.3.0"
+version = "0.4.0"
 
     [deps.AlternateVectors.extensions]
     SparseArraysExt = "SparseArrays"
